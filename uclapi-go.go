@@ -1,4 +1,4 @@
-// uclapi-go
+// A wrapper library for uclapi.
 package uclapi
 
 import (
@@ -17,7 +17,11 @@ const header = "uclapi-roombookings-version"
 const version = "1"
 
 type RoomKind string
+
+//Alias type for time.Time that follows the ISO 8601 formatting standard when is Encoded and Decoded.
 type KloppTime time.Time
+
+//Alias type for time.Time that follows the YYYYMMDD standard when is Encoded and Decoded.
 type Day time.Time
 
 const (
@@ -27,7 +31,8 @@ const (
 	PublicCluster  RoomKind = "PC1"
 )
 
-type ClientRoomBooking struct {
+//Wrapper for the room bookings api
+type WrapperRoomBooking struct {
 	token string
 }
 
@@ -52,6 +57,7 @@ type BookingOptList struct {
 	RoomName      string    `url:"roomname,omitempty"`
 }
 
+//Address is just an array of string that if concatened would create the entire address.
 type Location struct {
 	Address []string `json:"address"`
 }
@@ -104,8 +110,9 @@ type ResponseEquipment struct {
 	Equipments []Equipment `json:"equipment"`
 }
 
-func NewRoomBookingClient(token string) ClientRoomBooking {
-	return ClientRoomBooking{
+//NewRoomBookinsWrapper create a WrapperRoomBooking using the given token.
+func NewRoomBookingWrapper(token string) WrapperRoomBooking {
+	return WrapperRoomBooking{
 		token: token,
 	}
 }
@@ -182,7 +189,10 @@ func (date Day) EncodeValues(key string, v *url.Values) error {
 	return nil
 }
 
-func (ucl ClientRoomBooking) GetRooms(opt RoomOptList) (ResponseRooms, []error) {
+//GetRooms takes a RoomOptList object that contains the optional fields that can be used for the query to the rooms api.
+//In case of success it returns a ResponseRooms object and nil for error.
+//In case of error it returns an empty ResponseRooms object and an array for errors.
+func (ucl WrapperRoomBooking) GetRooms(opt RoomOptList) (ResponseRooms, []error) {
 	request_parameters, err := query.Values(opt)
 	if err != nil {
 		return ResponseRooms{}, []error{err}
@@ -196,7 +206,10 @@ func (ucl ClientRoomBooking) GetRooms(opt RoomOptList) (ResponseRooms, []error) 
 	return readRoomResponse(body)
 }
 
-func (ucl ClientRoomBooking) GetBookings(opt BookingOptList) (ResponseBookings, []error) {
+//GetBookings takes a BookingOptList object that contains the optional fields that can be used for the query to the bookings api.
+//In case of success it returns a ResponseBookings object and nil for error.
+//In case of error it returns an empty ResponseBookings object and an array for errors.
+func (ucl WrapperRoomBooking) GetBookings(opt BookingOptList) (ResponseBookings, []error) {
 	request_parameters, err := query.Values(opt)
 	if err != nil {
 		return ResponseBookings{}, []error{err}
@@ -210,7 +223,12 @@ func (ucl ClientRoomBooking) GetBookings(opt BookingOptList) (ResponseBookings, 
 	return readBookingResponse(body)
 }
 
-func (client ClientRoomBooking) NextPage(prev ResponseBookings) (ResponseBookings, []error) {
+//NextPage exists because the bookings api is paginated.
+//This function takes a previous ResponseBookings object and it returns the next page as a new ResponseBookings object.
+//In case of success it returns a ResponseBookings object and nil for error.
+//In case of failure it returns an empty ResponseBookings object and an array of errors.
+//This function fails in the case where the ResponseBookins object used as a parameter has the field NextPageExists set to false.
+func (client WrapperRoomBooking) NextPage(prev ResponseBookings) (ResponseBookings, []error) {
 	if !prev.NextPageExists {
 		return ResponseBookings{}, []error{errors.New("The next page doesn't exist")}
 	}
@@ -226,7 +244,10 @@ func (client ClientRoomBooking) NextPage(prev ResponseBookings) (ResponseBooking
 
 }
 
-func (client ClientRoomBooking) GetEquipment(roomId string, siteId string) (ResponseEquipment, []error) {
+//GetRooms takes a roomId and a siteId used for the query to the equipment api.
+//In case of success it returns a ResponseEquipment object and nil for error.
+//In case of error it returns an empty ResponseEquipment object and an array for errors.
+func (client WrapperRoomBooking) GetEquipment(roomId string, siteId string) (ResponseEquipment, []error) {
 	new_query := url.Values{}
 	new_query["token"] = []string{client.token}
 	new_query["roomid"] = []string{roomId}

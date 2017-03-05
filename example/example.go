@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	room_bookings := uclapi.NewRoomBookingClient("your token")
+	room_bookings := uclapi.NewRoomBookingWrapper("your token")
 
 	rooms, errs := room_bookings.GetRooms(uclapi.RoomOptList{})
 	fmt.Println(rooms, errs)
